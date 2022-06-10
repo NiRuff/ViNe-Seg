@@ -1,6 +1,6 @@
 # Visible Neuron Segmentation: ViNe-Seg (beta version)
 
-<img align="right" width="350" height="350" src=https://gitlab.com/isyn2/idsair-neuronlabeling/uploads/749c759d23251b454ebfc072a22914e0/Vine-seg.png width="30%" height="30%" /> <br>
+<img align="right" width="420" height="420" src=https://gitlab.com/isyn2/idsair-neuronlabeling/uploads/749c759d23251b454ebfc072a22914e0/Vine-seg.png width="30%" height="30%" /> <br>
 
 
 ### Embedding Deep-Learning assisted segmentation of Visible Neurons and subsequent Analysis in one Graphical User Interface
