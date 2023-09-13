@@ -53,10 +53,10 @@ conda activate vineseg-adv
 python -m vineseg
 ```
 
-Now, ViNe-Seg will check if you already have a version of the trained MONAI models installed and will download the default model version if none is currently in use on your machine.
+Now, ViNe-Seg will check if you already have a version of the trained models installed and will download the default model version if none is currently in use on your machine.
 
 After this step, the GUI will automatically be opened where you have the chance to download other models, choose between them, load your mean image in PNG or TIFF format and to run the autosegmentation using the ```Autosegmentation``` command shown in the menu bar in the top of the screen.
-We embedded the ViNe-Seg functionality in the labelme GUI (see https://github.com/wkentaro/labelme) by adding a button for running the autosegmentation step of ViNe-Seg in the GUI, as well as a model manager, trace extraction, baseline correction, the CASCADE SPIKE Inference. We also added some other underlying funtionalities such as automatic loading of the generated JSON labeling files and the option to load them from old ViNe-Seg runs using the new ```Load Polygon``` button or the possibility to manipulate the resulting JSON file by switching between enumerated Neuron labels (Neuron1, ..., NeuronX) and area-based Neuron labels (Neuron too small, ... , Neuron too big) by clicking a button. The area size from which the labels are derived can also be changed within the GUI. 
+We embedded the ViNe-Seg functionality in the labelme GUI (see https://github.com/wkentaro/labelme) by adding a button for running the autosegmentation step of ViNe-Seg in the GUI, as well as a model manager, trace extraction, baseline correction, the CASCADE SPIKE Inference. We also added some other underlying funtionalities such as automatic loading of the generated JSON labeling files and the option to load them from old ViNe-Seg runs using the new ```Load Polygon``` button or the possibility to manipulate the resulting segmentation output either by controlling the minimum ocnfidence from which one you want to see the segmentation results or by manually editing, adding or deleting shapes. You can further switch between enumerated Neuron labels (Neuron1, ..., NeuronX) and area-based Neuron labels (Neuron too small, ... , Neuron too big) by clicking a button or remove all neurons bigger/smaller than you previously defined within the GUI. 
 
 ## What ViNe-Seg can be used for:
 
