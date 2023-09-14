@@ -22,7 +22,22 @@
 
 ## Installation of the basic version of ViNe-Seg
 We aimed to develop ViNe-Seg as user-friendly as possible. Therefor, ViNe-Seg comes with a GUI and is easily installable using pip with the command:
+
+### General recommendation: Create a new conda environment
 ```
+conda create -n vineseg_env python=3.9
+conda activate vineseg_env
+```
+## Then run:
+### Windows recommendation:
+```
+pip install PyQt5
+pip install vineseg
+```
+
+### Mac recommendation:
+```
+conda install pyqt
 pip install vineseg
 ```
 
