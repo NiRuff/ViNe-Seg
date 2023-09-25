@@ -269,15 +269,3 @@ model.val(mode='test')
 ### Share Your Custom Model
 
 We are excited to host your custom model to make it accessible to other researchers. 
-
-
-
-## Automatic Preprocessing of images in the default model
-The quality and image properties between the Calcium images differ a lot. Therefore we apply automatically
-the CLAHE and NL-means algorithm before we feed the images into the neural network.
-Depending of the image, the preprocessing step has a high influence to the visibility of neurons. 
-Compare the original image <br>
-<img src=https://gitlab.com/isyn2/idsair-neuronlabeling/uploads/6d575eb498dc61e5be3c44269d074eeb/grafik.png width="30%" height="30%" /> <br>
-with the preprocessed one <br>
-<img src=https://gitlab.com/isyn2/idsair-neuronlabeling/uploads/d835b683cdac48123597177792d10e6e/grafik.png width="30%" height="30%" /><br>
-
