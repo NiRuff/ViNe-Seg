@@ -92,42 +92,184 @@ Here you can see some example videos of ViNe-Seg applied to the neurofinder data
 ### The Microscope Mode:
 <p align="center"><img src="https://github.com/NiRuff/GithubMedia/blob/main/ViNeSeg-3.gif" width="85%"  />
 
-## Training your own model
+## Train a custom vine-seg model
 
-Vineseg offers the possibility to integrate your own Monai model or to finetune an already existing model on your own data. The settings for the training can be specified via a config file.
-The training can be started in the subfolder with python training.py --path_config_file="path to your config file".
-The config file has the following options:
+### Data Preparation
 
-* path loading model: An already trained model can be used as starting point for further training. Specify here the folder where the model is located.
-* paths training image folder: List of folders with the training images
-* paths training masks folder: List of folders with the training masks
-* paths val image folder: List of folders with the validation images
-* paths val masks folder: List of folders with the validation masks 
-* valiation intervall: Distance in epochs between evaluation time points during training on the validation dataset
-* ROI training: Image size for training. Typically the ROI training is smaller than the original image size to get more training images.
-  ROI training is only used if "SpatialCrop" is part of augementation steps.
-* ROI validation: Image size for validation
-* augmentation probability: probability that a augmentation steps is applied on the training images.
-* preprocessing steps: List of preprocessing steps. The only option at the moment is "ScaleIntensity"
-* augmentation steps: List of augmentation steps. Valid options are "SpatialCrop", "GaussianNoise"
-  , "Rotate", "Flip", "Zoom", "ElasticDeformation" or "AffineTransformation" 
-* postprocessing: Dictionary with key "Activation" for the activation function. Options are "Sigmoid" or "Softmax" as values.
-  The other key "Threshold" specifies when the prediciton output is converted to 1.
-* model type: The type of the neural network. Valid options are "U-Net big", "SegResNet" or "UNetTransformer"
-* number input channel: Define how many different preprocessed duplications of one images are loaded into the network.
-* channel types input: List of feature engineering techniques which should be applied. The length of the list must be equal to number input channel.
-  Valid options are "identity", "clahe", "nl_means", "autolevel", "gamma low", "gamma high", "rolling ball" or "adjust sigmoid".
-* number output channel: Number of output images from the neural network.
-* channel types input: Further preprocessing steps, which are applied on the output from the neural network. The only valid option at the moment is ["identity"]
-* optimizer: "Adam" or "AdamW"
-* loss function: "Dice loss", "Focal loss", "Tversky loss", "Dice focal loss" or "Dice CE loss".
-* metrics: List with metrics for evaluation. "Dice Metric" as only option at the moment.
-* epochs: number of epochs
-* batch size: number of training images per batch.
-* learning rate: Initial learning rate. Will be decreased with factor (1 - current_epoch / max_epoch) ** 0.9 per epoch 
-* weight decay: Will be applied in case optimizer "AdamW"
-* path save model: folder for storing the trained neural network weights and the config file
-* logging training results: Not used at the moment
+In this section, we'll walk you through the steps to prepare your dataset for training. This involves creating projections of your data, annotating images, and setting up the folder structure.
+
+#### Create Mean/Max Projection of Your Data
+
+Before you start annotating, you should create mean or max projections of your data. This will help in better visualization and annotation. You can use image processing libraries like OpenCV or ImageJ to accomplish this.
+
+#### Annotate with LabelImg
+
+1. Download and install [LabelImg](https://github.com/HumanSignal/labelImg).
+2. Open LabelImg and load your mean/max projected images.
+3. Annotate the objects in the images and save the annotations in the COCO format.
+
+#### Create Data Folder
+
+Create a folder for your dataset in the `data/` directory. For example, create a folder named `example`:
+
+```bash
+mkdir data/example
+```
+
+#### Create Required Folder Structure
+
+Use the function `create_yolo_folder_struct`  (located in utils.py) to set up the required folder structure:
+
+```python
+create_yolo_folder_struct("data/example")
+```
+
+Your folder should now have the following structure:
+
+```
+data/example  
+├── coco  
+├── raw  
+└── yolo  
+```
+
+#### Prepare Training Data
+
+Use the `coco_seg_to_yolov8` function to prepare your training data:
+
+```python
+coco_seg_to_yolov8(
+    coco_path="data/example/coco",
+    yolo_path="data/example/yolo",
+    splits=[0.7, 0.2, 0.1]
+)
+```
+
+Here, `splits` is a list of three floats that add up to 1. The first number is the share of images used for training, the second for validation, and the third for testing.
+
+#### Create `data.yaml`
+
+Finally, create a `data.yaml` file inside the `data/example/yolo` folder with the following structure:
+
+```yaml
+path: /path/to/vineseg/data/example
+train: yolo/train/images
+val: yolo/val/images
+test: yolo/test/images
+nc: 1
+names: ['cell']
+```
+
+This YAML file will be used during the training process to locate your dataset and set other configurations.
+
+### Training
+
+In this section, we'll guide you through the process of training your custom model. This involves setting up your training environment and running the training script.
+
+#### Hardware Requirements
+
+It's recommended to use a PC with a sufficient GPU for training. Ensure that your GPU has a vRAM of at least 8GB for optimal performance.
+
+#### Open Jupyter Notebook
+
+Open the Jupyter notebook named `train.ipynb` where the training code is located.
+
+#### Choose a Model
+
+You have two options for starting your training:
+
+1. **Pre-trained Model**: Use a pre-trained model from Ultralytics that hasn't been trained on neurons yet. You can find a list of available models [here](https://docs.ultralytics.com/tasks/detect/#models). To load a small model, for example, use:
+   
+   ```python
+   model = YOLO('yolov8s-seg.pt')
+   ```
+
+2. **Downloaded Model**: Use one of the downloaded models that you can access through the ViNeSeg GUI. To specify the path to one of these models, use:
+   
+   ```python
+   model = YOLO('/path/to/vineseg/models/model.pt')
+   ```
+
+#### Start Training
+
+To start the training process, use the `train` method:
+
+```python
+model.train(
+    data='/path/to/vineseg/data/example/data.yaml',
+    epochs=100,
+    imgsz=640,
+    batch=16,
+    show_labels=True
+)
+```
+
+Here, you can adjust the `epochs`, `imgsz`, `batch`, and `show_labels` parameters according to your needs.
+
+#### Parameters for `model.train()`
+
+- **`data: str`**: This is the path to the `data.yaml` file that contains metadata about your dataset. It specifies where your training, validation, and test data are located.
+  
+  Example: `data='/path/to/vineseg/data/example/data.yaml'`
+
+- **`epochs: int = 100`**: The number of training epochs. An epoch is one complete forward and backward pass of all the training examples. The default value is 100.
+  
+  Example: `epochs=100`
+
+- **`imgsz: int = 640`**: The size of the images for training. The images will be resized to this dimension (width x height). The default value is 640.
+  
+  Example: `imgsz=640`
+
+- **`batch: int = 16`**: The batch size for training. This is the number of training examples utilized in one iteration. The default value is 16.
+  
+  Example: `batch=16`
+
+- **`show_labels: bool = True`**: Whether or not to display the labels during training. This is useful for visualizing the training process. The default value is True.
+  
+  Example: `show_labels=True`
+
+#### Locate Trained Model and Weights
+
+After the training is complete, you can find the trained model in the following directory:
+
+```
+/path/to/vineseg/runs/train
+```
+
+The weights for the trained model will be stored in:
+
+```
+/path/to/vineseg/runs/train/weights
+```
+
+#### Make Weights Accessible in ViNeSeg
+
+To use the trained model in ViNeSeg, you need to copy the weights from the `runs/weights` folder to the ViNeSeg model folder.
+
+### Evaluate
+
+After training your custom model, it's crucial to evaluate its performance to ensure it meets your project's requirements. This section will guide you through the evaluation process.
+
+#### Validation Set
+
+To get performance numbers for the validation set, run:
+
+```python
+model.val()
+```
+
+#### Test Set
+
+To evaluate the model on the test set, specify the `mode` parameter as 'test':
+
+```python
+model.val(mode='test')
+```
+
+### Share Your Custom Model
+
+We are excited to host your custom model to make it accessible to other researchers. 
+
 
 
 ## Automatic Preprocessing of images in the default model
