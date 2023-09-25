@@ -95,7 +95,7 @@ Here you can see some example videos of ViNe-Seg applied to the neurofinder data
 
 
 ### The Microscope Mode:
-<p align="center"><img src="https://github.com/NiRuff/GithubMedia/blob/main/ViNeSeg-3.gif" width="85%"  />
+<p align="center"><img src="https://github.com/NiRuff/GithubMedia/blob/main/ViNeSeg_Microscope.gif" width="85%"  />
 
 ## Train a custom vine-seg model
 
