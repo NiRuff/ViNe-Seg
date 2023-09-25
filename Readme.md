@@ -55,7 +55,7 @@ pip install vineseg
 
 
 <!---![showcase gif](https://github.com/NiRuff/GithubMedia/blob/main/ViNeSeg_Installation.gif)--->
-<p align="center"><img src="https://github.com/NiRuff/GithubMedia/blob/main/ViNeSeg_Installation "  width="85%"></p>
+<p align="center"><img src="https://github.com/NiRuff/GithubMedia/blob/main/ViNeSeg_Installation.gif"  width="85%"></p>
 
 From now on, the advanced version of ViNe-Seg will be installed in your conda environment called *vineseg-adv*.
 
