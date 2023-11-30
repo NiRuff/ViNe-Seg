@@ -1,0 +1,1 @@
+{"installed": [{"name": "Default Model", "location": "vine_seg-naomi_100epoch.pt"}, {"name": "YOLO Model ALL", "location": "vine_seg-all_50epochs.pt"}, {"name": "YOLO Model NAOMi-100epoch", "location": "vine_seg-naomi_100epoch.pt"}]}
