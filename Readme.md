@@ -41,6 +41,14 @@ conda install pyqt
 pip install vineseg
 ```
 
+### Ubuntu recommendation:
+```
+conda install pyqt
+pip install vineseg
+pip uninstall opencv-python
+pip install opencv-python-headless 
+```
+
 ViNe-Seg will be downloaded and installed with all necessary dependencies.
 
 ### Installation of the advanced version of ViNe-Seg, including the CASCADE SPIKE inference
