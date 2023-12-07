@@ -53,7 +53,7 @@ In this step, you can further vary your segmentation output. Here you can delete
 
 #### Extract Traces
 
-After adjusting your segmentation and saving the reults (Ctrl + S), you can initiate the _Extract Traces_-Operation in the _Trace Extraction_ Menu. After clicking the button you will be prompted for the directory in which you experiment (typically your tif(f) stack) is stored. After providing these files, you will be prompted to confirm the number of frames detected in your directory.
+After adjusting your segmentation and saving the results (Ctrl + S), you can initiate the _Extract Traces_-Operation in the _Trace Extraction_ Menu. After clicking the button you will be prompted for the directory in which your experiment (typically your tif(f) stack) is stored. After providing these files, you need to confirm the number of frames detected in your directory.
 
 | Extract Traces         | Choose Directory       |
 | ---------------------- | ---------------------- |
