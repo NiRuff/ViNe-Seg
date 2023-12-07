@@ -1339,10 +1339,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                      "Please try another model or adapt min/max size of neuronal bodies.",
                                                      QtWidgets.QMessageBox.Ok)
                     mbFormat.exec()
-                else:
-                    vineseg_list = get_vineseg_list(prediction_result, min_size=self.minMaxNeuronValues[0], max_size=self.minMaxNeuronValues[1])
-                    #print(vineseg_list)
 
+                else:
+                    vineseg_list = get_vineseg_list(prediction_result, min_size=int(self.minMaxNeuronValues[0] // 2),
+                                                    max_size=int(self.minMaxNeuronValues[1] * 2))
                 import base64
 
                 def image_to_base64(image_path):
@@ -1353,8 +1353,10 @@ class MainWindow(QtWidgets.QMainWindow):
                         # Encode as base64
                         encoded = base64.b64encode(data)
                         return encoded.decode('utf-8')
+                imageData = image_to_base64(image_path)
+                #print("imageData", imageData)
 
-                json_out = {"version": "4.5.13", "flags": {}, "shapes":vineseg_list, "imagePath": image_path, "imageData": image_to_base64(image_path), "imageHeight":512, "imageWidth": 512}
+                json_out = {"version": "4.5.13", "flags": {}, "shapes":vineseg_list, "imagePath": image_path, "imageData": imageData, "imageHeight":utils.img_b64_to_arr(imageData).shape[0], "imageWidth": utils.img_b64_to_arr(imageData).shape[1]}
                 #print(json_out)
 
                 import shutil
@@ -1367,19 +1369,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 # Step 3: Copy the current image to the 'data' directory
                 new_image_path = os.path.join(data_dir, os.path.basename(self.imagePath))
-                if self.imagePath != new_image_path:
+
+                if self.imagePath.replace("\\", "/") != new_image_path.replace("\\", "/"):
                     shutil.copy(self.imagePath, new_image_path)
 
                 # Step 4: Modify `self.imagePath` to point to the new location
                 self.imagePath = new_image_path
-                
-                print(2, self.imagePath)
 
                 import stat
                 file_path = self.getJSONFile()
                 self.filename=file_path
                 self.labelFile = file_path
-                print(3, self.filename)
+                print(file_path)
                 dir_path = os.path.dirname(file_path)
 
                 # Ensure directory exists with the right permissions
@@ -1397,28 +1398,27 @@ class MainWindow(QtWidgets.QMainWindow):
                     temp_name = tmpfile.name
 
                 # If you want to move the temporary file to the desired location
-                import shutil
                 shutil.move(temp_name, file_path)
 
                 self.labelingMode = "Area"
                 self.traceProgress.setValue(self.traceProgress.maximum())
                 self.traceProgress.close()
 
+                #self.loadPolygons()
                 self.setClean()
-                
+
                 if self.filename:
                     if self.filename.endswith(".json"):
                         self.updateJSON()
                         self.loadFile(self.filename, justJSON=True)
-
 
             else:
                 self.traceProgress.close()
 
         else:
             self.traceProgress.close()
+        # load again here as it sometimes doesn't execute earlier (??)
         self.loadPolygons()
-
 
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.
@@ -1517,7 +1517,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menu.clear()
         models = [m for m in self.allModels]
 
-        print(1,self.currentModel)
+        #print(self.currentModel)
 
         if self.currentModel == None:
             self.setModel(models[0])
@@ -2062,7 +2062,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.brightnessContrast_values[self.filename] = (brightness, contrast)
 
     def switchLabelingMode(self):
-
+        self.setDirty()
         if self.mayContinue():
             if self.labelingMode == "Enumerate":
                 self.labelingMode = "Area"
@@ -2264,7 +2264,7 @@ class MainWindow(QtWidgets.QMainWindow):
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
 
     def loadFile(self, filename=None, justJSON=False, confidence=50):
-    
+
         if filename is not None:
             # tif file conversion to 8 bit png if tif was 16 bit
             if filename.endswith("tif"):
@@ -2674,10 +2674,12 @@ class MainWindow(QtWidgets.QMainWindow):
         masks = []
 
         for i in range(0, len(data['shapes'])):
-            roimask = shape_to_mask((data['imageHeight'], data['imageWidth']), data['shapes'][i]['points'],
+            # compute only for shapes with min confidence
+            if data['shapes'][i]['score']*100 >= self.getConfidence():
+                roimask = shape_to_mask((data['imageHeight'], data['imageWidth']), data['shapes'][i]['points'],
                                     shape_type=None,
                                     line_width=1, point_size=1)
-            masks.append(roimask)
+                masks.append(roimask)
 
         self.traceProgress.setValue(10)
 
@@ -2931,7 +2933,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return label_file
 
     def getLabelFile(self):
-        print(5, self.filename.lower())
         if self.filename.lower().endswith(".json"):
             label_file = self.filename
         else:
@@ -2960,7 +2961,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.resetState()
 
     def loadPolygons(self):
-        print(6, self.getJSONFile())
         if not self.mayContinue():
             return
 
