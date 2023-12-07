@@ -9,13 +9,11 @@ To facilitate the testing of the segmentation process, we have uploaded a mean i
 
 - Provide a practical example for users.
 - Enable testing of segmentation on a mean image.
-- Allow exploration of the functionalities of the microscope mode.
 - Offer an opportunity to experiment with trace extraction.
 
 This sample dataset, originating from the Neurofinder's 03.00 dataset, serves as a basic demonstration of ViNe-Seg's capabilities.
 
-
-### ViNe-Seg Tutorial using the example data
+## ViNe-Seg Tutorial using the example data
 
 Here we assume you already installed and started ViNe-Seg as described in the [Instructions](https://github.com/NiRuff/ViNe-Seg/blob/main/Readme.md)
 
