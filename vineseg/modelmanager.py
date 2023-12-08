@@ -16,7 +16,39 @@ manifest_path = os.path.join(script_dir, "experiments/MANIFEST.json")
 
 
 class ModelWindow(QWidget):
+
+    """
+    Represents the main window for managing models.
+
+    Attributes:
+        - local_manifest: Dictionary containing information about locally installed models.
+        - online_manifest: Dictionary containing information about available online models.
+        - model_list: List containing models to be displayed in the table.
+
+    Methods:
+        - __init__: Initializes the ModelWindow instance.
+        - initUI: Initializes the user interface components.
+        - load_manifests: Loads online and local manifests.
+        - compare_manifests: Compares online and local manifests to identify changes.
+        - setup_table: Sets up a table for displaying model information.
+        - selection_changed: Handles the selection change in the table.
+        - disconnect_button: Disconnects the button click event.
+        - install_model: Installs a selected model.
+        - uninstall_model: Uninstalls a selected model.
+        - Handle_Progress: Handles the progress bar of model downloads.
+    """
+
     def __init__(self):
+        """
+        Initializes the ModelWindow instance.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
+        
         super().__init__()
         self.setWindowTitle("Model Manager")
 
@@ -25,7 +57,18 @@ class ModelWindow(QWidget):
         self.compare_manifests()
         self.setup_table()
 
+
     def initUI(self, MainWindow):
+        """
+        Loads manifests related to models.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
+        
         MainWindow.setObjectName("ModelManagerWindow")
         MainWindow.resize(700, 300)
         MainWindow.setMinimumWidth(700)
@@ -85,13 +128,34 @@ class ModelWindow(QWidget):
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tableWidget.itemSelectionChanged.connect(self.selection_changed)
 
+
     def load_manifests(self):
+        """
+        Loads online and offline manifests.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
         with open(manifest_path, 'r') as f:
             self.local_manifest = json.load(f)
         with urllib.request.urlopen(default_url + "MANIFEST.json") as url:
             self.online_manifest = json.loads(url.read().decode())
 
+
     def compare_manifests(self):
+        """
+        Compares online and offline manifests to identify changes.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
+        
         self.model_list = []
         # check if default model is installed
         if next((item for item in self.local_manifest["installed"] if
@@ -111,7 +175,18 @@ class ModelWindow(QWidget):
                 model["status"] = "available"
                 self.model_list.append(model)
 
+
     def setup_table(self):
+        """
+        Sets up a table for displaying model information.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
+        
         self.tableWidget.setRowCount(len(self.model_list))
         i = 0
         for model in self.model_list:
@@ -122,7 +197,17 @@ class ModelWindow(QWidget):
             i += 1
         #self.tableWidget.horizontalHeader().resizeSections(QHeaderView.ResizeToContents)
 
+
     def selection_changed(self):
+        """
+        Handles the selection change in the table.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
         self.disconnect_button()
         index = self.tableWidget.selectionModel().selectedRows(0)
         if index:
@@ -143,13 +228,34 @@ class ModelWindow(QWidget):
             self.pushButton.setText("Select a Model")
             self.pushButton.setEnabled(False)
 
+
     def disconnect_button(self):
+        """
+        Disconnects the button click event.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
         try:
             self.pushButton.clicked.disconnect()
         except Exception:
             pass
 
+
     def install_model(self, model_index):
+        """
+        Installs a selected model.
+
+        Parameters:
+            - model_index: Index of the selected model in the model list.
+
+        Returns:
+            - None
+        """
+        
         # avoid duble click
         self.disconnect_button()
         self.pushButton.setEnabled(False)
@@ -223,7 +329,18 @@ class ModelWindow(QWidget):
         self.label.setText("")
         self.selection_changed()
 
+
     def uninstall_model(self, model_index):
+        """
+        Uninstalls a selected model.
+
+        Parameters:
+            - model_index: Index of the selected model in the model list.
+
+        Returns:
+            - None
+        """
+        
         self.disconnect_button()
         self.pushButton.setEnabled(False)
         self.pushButton.setText("Removing...")
@@ -259,20 +376,24 @@ class ModelWindow(QWidget):
         self.setup_table()
         self.selection_changed()
 
+
     def Handle_Progress(self, blocknum, blocksize, totalsize):
+        """
+        Handles the progress of model downloads.
+
+        Parameters:
+            - blocknum: Number of blocks downloaded.
+            - blocksize: Size of each block.
+            - totalsize: Total size of the file being downloaded.
+
+        Returns:
+            - None
+        """
+        
         # calculate the progress
-        readed_data = blocknum * blocksize
+        read_data = blocknum * blocksize
 
         if totalsize > 0:
-            download_percentage = readed_data * 100 / totalsize
+            download_percentage = round(read_data * 100 / totalsize)
             self.progressBar.setValue(download_percentage)
             QtWidgets.QApplication.processEvents()
-
-# seems to be irrelevant
-"""
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    mainWin = ModelWindow()
-    mainWin.show()
-    sys.exit(app.exec_())
-"""

@@ -1378,6 +1378,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 import stat
                 file_path = self.getJSONFile()
+                self.originalImageFile = self.filename
                 self.filename=file_path
                 self.labelFile = file_path
                 print(file_path)
@@ -2588,7 +2589,36 @@ class MainWindow(QtWidgets.QMainWindow):
             msg = self.tr("Spike probabilities and discrete locations written to {}.".format(df_f_path + "/predictions"))
             mb.warning(self, self.tr("Attention"), msg, mb.Ok)
 
-
+    def saveTracesDialog(self):
+    
+        if self.originalImageFile:
+            defaultOpenDirPath = (
+                osp.dirname(self.originalImageFile) if self.originalImageFile else "."
+            )
+        else:
+            defaultOpenDirPath = self.currentPath()
+            
+        filters = self.tr("Trace files (*%s)") % "tsv"
+        dlg = QtWidgets.QFileDialog(
+            self, "Choose File", defaultOpenDirPath, filters
+        )
+        dlg.setDefaultSuffix(LabelFile.suffix[1:])
+        dlg.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dlg.setOption(QtWidgets.QFileDialog.DontConfirmOverwrite, False)
+        dlg.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, False)
+        basename = osp.basename(osp.splitext(self.filename)[0])
+        default_tracesfile_name = osp.join(
+                defaultOpenDirPath, basename + "traces.tsv"
+            )
+        filename = dlg.getSaveFileName(
+            self,
+            self.tr("Choose File"),
+            default_tracesfile_name,
+            self.tr("Traces files (*%s)") % "tsv",
+        )
+        if isinstance(filename, tuple):
+            filename, _ = filename
+        return filename
 
     def start_trace_extraction(self):
         if not self.mayContinue():
@@ -2605,6 +2635,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # get dir
         if self.lastOpenDir and osp.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
+        elif self.originalImageFile:
+            defaultOpenDirPath = (
+                osp.dirname(self.originalImageFile) if self.originalImageFile else "."
+            )
         else:
             defaultOpenDirPath = (
                 osp.dirname(self.filename) if self.filename else "."
@@ -2687,12 +2721,15 @@ class MainWindow(QtWidgets.QMainWindow):
             traces = pool.starmap(tracesForImage, zip(imagesArray, repeat(masks, len(imagesArray))))
 
         self.traceProgress.setValue(self.traceProgress.maximum() - 10)
-
+        
+        
+        traceFileName = self.saveTracesDialog()
         # write traces to file
-        pd.DataFrame(data=np.array(traces)).to_csv(self.filename.replace(".json", "_traces.tsv"), sep="\t", header=False, index=False)
+        pd.DataFrame(data=np.array(traces)).to_csv(traceFileName, sep="\t", header=False, index=False)
         self.traceProgress.setValue(self.traceProgress.maximum())
         self.traceProgress.close()
 
+        
         # get long filter length
         lfl, ok = QtWidgets.QInputDialog().getInt(self,
                                                      "Dynamic Baseline Estimation (long filter length)",
@@ -2700,17 +2737,24 @@ class MainWindow(QtWidgets.QMainWindow):
                                                      5401, 0, 1000000)
 
         if ok and lfl:
-            dff_calc(self.filename.replace(".json", "_traces.tsv"), lfl)
-
+            self.traceProgress = QtWidgets.QProgressDialog("Calculating dF/F...", "cancel", 0, len(imagesArray), self)
+            self.traceProgress.setWindowModality(Qt.WindowModal)
+            self.traceProgress.forceShow()
+            self.traceProgress.setValue(1)
+            
+            dff_calc(traceFileName, lfl)
+            
+            self.traceProgress.setValue(self.traceProgress.maximum())
+            self.traceProgress.close()
             mbFormat = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "Files Written",
-                                             "Raw Traces and dF/F files written to {}.".format(os.path.dirname(self.filename)),
+                                             "Raw Traces and dF/F files written to {}.".format(os.path.dirname(traceFileName)),
                                              QtWidgets.QMessageBox.Ok)
             mbFormat.exec()
 
         else:
             mbFormat = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "No RWS was given",
                                              "No rolling window size was given. Only raw traces were written to {}.".format(
-                                                 os.path.dirname(self.filename)),
+                                                 os.path.dirname(traceFileName)),
                                              QtWidgets.QMessageBox.Ok)
             mbFormat.exec()
 
