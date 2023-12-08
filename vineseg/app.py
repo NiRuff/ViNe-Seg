@@ -49,7 +49,6 @@ from .cascade2p import checks
 import sys
 from .ai_pipeline.vine_seg.utils import predict, get_vineseg_list
 
-
 from multiprocessing import Pool
 from itertools import repeat
 
@@ -90,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.currentModel = None
         self.currentModelTraceX = None
         self.micModeOn = False
+        self.originalImageFile = None
 
         # set default shape colors
         Shape.line_color = QtGui.QColor(*self._config["shape"]["line_color"])
@@ -213,7 +213,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListLayout.addWidget(self.sl)
         self.sl.valueChanged.connect(self.valuechange)
         self.sl.sliderReleased.connect(self.valueapply)
-        #self.setLayout(fileListLayout)
+        # self.setLayout(fileListLayout)
         self.setWindowTitle("ViNe-Seg")
 
         self.canvas = self.labelList.canvas = Canvas(
@@ -234,7 +234,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.canvas.newShape.connect(self.newShape)
         self.canvas.shapeMoved.connect(self.movedShape)
-        #self.canvas.shapeMoved.connect(self.setDirty)
+        # self.canvas.shapeMoved.connect(self.setDirty)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
         self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
 
@@ -658,12 +658,12 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=True,
         )
         removeAberrantNeurons = action(
-        "&Remove aberrant Neurons",
-        self.removeAberrantNeurons,
-        None,
-        "remove_aberrant",
-        "Remove segmented neurons deviating from defined max/min area",
-        enabled = True,
+            "&Remove aberrant Neurons",
+            self.removeAberrantNeurons,
+            None,
+            "remove_aberrant",
+            "Remove segmented neurons deviating from defined max/min area",
+            enabled=True,
         )
         changeNeuronLabels = action(
             "&Switch Labeling of neurons",
@@ -937,9 +937,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Menu buttons on Left
         self.actions.tool = (
             open_,
-            #opendir,
-            #openNextImg,
-            #openPrevImg,
+            # opendir,
+            # openNextImg,
+            # openPrevImg,
             save,
             refresh,
             loadPolygons,
@@ -948,8 +948,8 @@ class MainWindow(QtWidgets.QMainWindow):
             editMode,
             duplicate,
             # removed to have more space in menu
-            #copy,
-            #paste,
+            # copy,
+            # paste,
             delete,
             undo,
             brightnessContrast,
@@ -990,9 +990,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fit_window = False
         self.zoom_values = {}  # key=filename, value=(zoom_mode, zoom_value)
         self.brightnessContrast_values = {}
-        self.minMaxNeuronValues = [100,1000]
-        #self.frameRate = 30.8
-        self.labelingMode = "Enumerate" #Enumerate or Area
+        self.minMaxNeuronValues = [100, 1000]
+        # self.frameRate = 30.8
+        self.labelingMode = "Enumerate"  # Enumerate or Area
         self.scroll_values = {
             Qt.Horizontal: {},
             Qt.Vertical: {},
@@ -1256,16 +1256,14 @@ class MainWindow(QtWidgets.QMainWindow):
         mbFormat.exec()
         self.actions.refresh.setEnabled(True)
 
-
-
     def autosegmentation(self):
 
         if not self.mayContinue():
             return
 
         sys.path.insert(0, './ai_pipeline')
-        #from .ai_pipeline.prediction import pred_main
-        #from .ai_pipeline.model import test
+        # from .ai_pipeline.prediction import pred_main
+        # from .ai_pipeline.model import test
 
         self.traceProgress = QtWidgets.QProgressDialog("Autosegmentation...", "cancel", 0, 100,
                                                        self)
@@ -1296,21 +1294,27 @@ class MainWindow(QtWidgets.QMainWindow):
                 # tiff tif or PNG
                 if self.imagePath.endswith(".png"):
                     im_output.save(osp.splitext(self.imagePath)[0] + "_b_{brightness}_c{contrast}.png".format(
-                        brightness=self.brightnessContrast_values[self.filename][0], contrast = self.brightnessContrast_values[self.filename][1]))
+                        brightness=self.brightnessContrast_values[self.filename][0],
+                        contrast=self.brightnessContrast_values[self.filename][1]))
                     self.imagePath = osp.splitext(self.imagePath)[0] + "_b_{brightness}_c{contrast}.png".format(
-                        brightness=self.brightnessContrast_values[self.filename][0], contrast = self.brightnessContrast_values[self.filename][1])
+                        brightness=self.brightnessContrast_values[self.filename][0],
+                        contrast=self.brightnessContrast_values[self.filename][1])
                     self.loadFile(self.imagePath)
                 elif self.imagePath.endswith(".tiff"):
                     im_output.save(osp.splitext(self.imagePath)[0] + "_b_{brightness}_c{contrast}.tiff".format(
-                        brightness=self.brightnessContrast_values[self.filename][0], contrast = self.brightnessContrast_values[self.filename][1]), quality=100)
+                        brightness=self.brightnessContrast_values[self.filename][0],
+                        contrast=self.brightnessContrast_values[self.filename][1]), quality=100)
                     self.imagePath = osp.splitext(self.imagePath)[0] + + "_b_{brightness}_c{contrast}.tiff".format(
-                        brightness=self.brightnessContrast_values[self.filename][0], contrast = self.brightnessContrast_values[self.filename][1])
+                        brightness=self.brightnessContrast_values[self.filename][0],
+                        contrast=self.brightnessContrast_values[self.filename][1])
                     self.loadFile(self.imagePath)
                 elif self.imagePath.endswith(".tif"):
                     im_output.save(osp.splitext(self.imagePath)[0] + + "_b_{brightness}_c{contrast}.tif".format(
-                        brightness=self.brightnessContrast_values[self.filename][0], contrast = self.brightnessContrast_values[self.filename][1]), quality=100)
+                        brightness=self.brightnessContrast_values[self.filename][0],
+                        contrast=self.brightnessContrast_values[self.filename][1]), quality=100)
                     self.imagePath = osp.splitext(self.imagePath)[0] + + "_b_{brightness}_c{contrast}.tif".format(
-                        brightness=self.brightnessContrast_values[self.filename][0], contrast = self.brightnessContrast_values[self.filename][1])
+                        brightness=self.brightnessContrast_values[self.filename][0],
+                        contrast=self.brightnessContrast_values[self.filename][1])
                     self.loadFile(self.imagePath)
 
         elif self.imagePath == None:
@@ -1329,7 +1333,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 image_path = self.imagePath
                 model_path = os.path.dirname(__file__).replace("\\", "/") + "/experiments/" + self.currentModel
-
 
                 prediction_result = predict(image_path, model_path, plot_first=True)
                 if prediction_result[0].masks == None:
@@ -1353,11 +1356,14 @@ class MainWindow(QtWidgets.QMainWindow):
                         # Encode as base64
                         encoded = base64.b64encode(data)
                         return encoded.decode('utf-8')
-                imageData = image_to_base64(image_path)
-                #print("imageData", imageData)
 
-                json_out = {"version": "4.5.13", "flags": {}, "shapes":vineseg_list, "imagePath": image_path, "imageData": imageData, "imageHeight":utils.img_b64_to_arr(imageData).shape[0], "imageWidth": utils.img_b64_to_arr(imageData).shape[1]}
-                #print(json_out)
+                imageData = image_to_base64(image_path)
+                # print("imageData", imageData)
+
+                json_out = {"version": "4.5.13", "flags": {}, "shapes": vineseg_list, "imagePath": image_path,
+                            "imageData": imageData, "imageHeight": utils.img_b64_to_arr(imageData).shape[0],
+                            "imageWidth": utils.img_b64_to_arr(imageData).shape[1]}
+                # print(json_out)
 
                 import shutil
                 # Step 1: Get the current module's directory
@@ -1379,7 +1385,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 import stat
                 file_path = self.getJSONFile()
                 self.originalImageFile = self.filename
-                self.filename=file_path
+                self.filename = file_path
                 self.labelFile = file_path
                 print(file_path)
                 dir_path = os.path.dirname(file_path)
@@ -1405,7 +1411,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.traceProgress.setValue(self.traceProgress.maximum())
                 self.traceProgress.close()
 
-                #self.loadPolygons()
+                # self.loadPolygons()
                 self.setClean()
 
                 if self.filename:
@@ -1518,12 +1524,12 @@ class MainWindow(QtWidgets.QMainWindow):
         menu.clear()
         models = [m for m in self.allModels]
 
-        #print(self.currentModel)
+        # print(self.currentModel)
 
         if self.currentModel == None:
             self.setModel(models[0])
         if not os.path.exists(os.path.join(os.path.sep, os.path.dirname(__file__), "experiments", self.currentModel)):
-            #print(os.path.join(os.path.sep, os.path.dirname(__file__), "experiments", self.currentModel))
+            # print(os.path.join(os.path.sep, os.path.dirname(__file__), "experiments", self.currentModel))
             self.setModel(models[0])
         for i, m in enumerate(models):
             if m != self.currentModel:
@@ -1568,7 +1574,8 @@ class MainWindow(QtWidgets.QMainWindow):
             models = [m for m in self.traceXModels]
             if self.currentModelTraceX == None:
                 self.setModelTraceX(models[0])
-            if not os.path.exists(os.path.join(os.path.sep, os.path.dirname(__file__), "CASCADE_models", self.currentModelTraceX)):
+            if not os.path.exists(
+                    os.path.join(os.path.sep, os.path.dirname(__file__), "CASCADE_models", self.currentModelTraceX)):
                 self.setModelTraceX(models[0])
             for i, m in enumerate(models):
                 if m != self.currentModelTraceX:
@@ -1629,7 +1636,7 @@ class MainWindow(QtWidgets.QMainWindow):
         shape = item.shape()
         if shape is None:
             return
-        #print(shape.label)
+        # print(shape.label)
         text, flags, group_id = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
@@ -1787,8 +1794,8 @@ class MainWindow(QtWidgets.QMainWindow):
             group_id = shape["group_id"]
             other_data = shape["other_data"]
             try:
-                score=other_data["score"]
-                if score*100 < confidence:
+                score = other_data["score"]
+                if score * 100 < confidence:
                     continue
             except KeyError:
                 if not warningDisplayed:
@@ -1925,7 +1932,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Callback functions:
 
-    def movedShape(self, text = "Neuron manual", flags= {}, group_id = None):
+    def movedShape(self, text="Neuron manual", flags={}, group_id=None):
         for shape in self.canvas.selectedShapes:
             self.addLabel(shape, moved=True)
         self.labelList.clearSelection()
@@ -1946,10 +1953,10 @@ class MainWindow(QtWidgets.QMainWindow):
         group_id = None
         if self._config["display_label_popup"] or not text:
             previous_text = self.labelDialog.edit.text()
-            text, flags, group_id = "Neuron manual", {}, None#self.labelDialog.popUp(text)
-            #text, flags, group_id = self.labelDialog.popUp(text)
-            #print(text, flags, group_id)
-            #if not text:
+            text, flags, group_id = "Neuron manual", {}, None  # self.labelDialog.popUp(text)
+            # text, flags, group_id = self.labelDialog.popUp(text)
+            # print(text, flags, group_id)
+            # if not text:
             #    self.labelDialog.edit.setText(previous_text)
 
         # if text and not self.validateLabel(text):
@@ -1963,7 +1970,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if text:
             self.labelList.clearSelection()
             shape = self.canvas.setLastLabel(text, flags)
-            #shape = self.canvas.setLastLabel("Neuron manual", flags) # for naming them neuron manual regardless of users choice
+            # shape = self.canvas.setLastLabel("Neuron manual", flags) # for naming them neuron manual regardless of users choice
             shape.group_id = group_id
             self.addLabel(shape, copy=True, new=True)
             self.actions.editMode.setEnabled(True)
@@ -2205,11 +2212,11 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 print("No .json file loaded")
 
-
     def adjustMinNeuronSize(self, value):
         if not self.mayContinue():
             return
-        minArea, ok = QtWidgets.QInputDialog().getInt(self, "Choose minimum Neuron Area for Neuron Labeling (default: 100)",
+        minArea, ok = QtWidgets.QInputDialog().getInt(self,
+                                                      "Choose minimum Neuron Area for Neuron Labeling (default: 100)",
                                                       "Minimum Area (px)",
                                                       self.minMaxNeuronValues[0])
         if ok and minArea:
@@ -2271,14 +2278,14 @@ class MainWindow(QtWidgets.QMainWindow):
             if filename.endswith("tif"):
                 image = imageio.imread(filename)
                 # downscaling to 8bit and upscaling for low max brightness
-                image = (image/(image.max()/255)).astype('uint8')
+                image = (image / (image.max() / 255)).astype('uint8')
                 filename = filename.replace(".tif", ".png")
                 imageio.imwrite(filename, image)
 
             elif filename.endswith("tiff"):
                 image = imageio.imread(filename)
                 # downscaling to 8bit and upscaling for low max brightness
-                image = (image/(image.max()/255)).astype('uint8')
+                image = (image / (image.max() / 255)).astype('uint8')
                 filename = filename.replace(".tiff", ".png")
                 imageio.imwrite(filename, image)
 
@@ -2299,10 +2306,10 @@ class MainWindow(QtWidgets.QMainWindow):
             # soft resetState
             self.labelList.clear()
             self.uniqLabelList.clear()
-            #self.filename = None
+            # self.filename = None
             # self.currentModel = None
-            #self.imagePath = None
-            #self.imageData = None
+            # self.imagePath = None
+            # self.imageData = None
             self.labelFile = None
             self.otherData = None
             self.canvas.resetState()
@@ -2576,31 +2583,33 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             df_f_path = self.get_file_path()
 
-       # run cascade code
+        # run cascade code
         if df_f_path:
             self.traceProgress = QtWidgets.QProgressDialog("Running CASCADE Spike Inference...", "Cancel", 0, 10, self)
             self.traceProgress.setWindowModality(Qt.WindowModal)
             self.traceProgress.forceShow()
 
             run_CASCADE(dff_path=df_f_path, model_name=os.path.join(os.path.sep, os.path.dirname(__file__),
-                                                                    "CASCADE_models", self.currentModelTraceX), pb=self.traceProgress)
+                                                                    "CASCADE_models", self.currentModelTraceX),
+                        pb=self.traceProgress)
 
             mb = QtWidgets.QMessageBox
-            msg = self.tr("Spike probabilities and discrete locations written to {}.".format(df_f_path + "/predictions"))
+            msg = self.tr(
+                "Spike probabilities and discrete locations written to {}.".format(df_f_path + "/predictions"))
             mb.warning(self, self.tr("Attention"), msg, mb.Ok)
 
     def saveTracesDialog(self):
-    
+
         if self.originalImageFile:
             defaultOpenDirPath = (
                 osp.dirname(self.originalImageFile) if self.originalImageFile else "."
             )
         else:
             defaultOpenDirPath = self.currentPath()
-            
+
         filters = self.tr("Trace files (*%s)") % "tsv"
         dlg = QtWidgets.QFileDialog(
-            self, "Choose File", defaultOpenDirPath, filters
+            self, "Choose where to store traces", defaultOpenDirPath, filters
         )
         dlg.setDefaultSuffix(LabelFile.suffix[1:])
         dlg.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -2608,11 +2617,11 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, False)
         basename = osp.basename(osp.splitext(self.filename)[0])
         default_tracesfile_name = osp.join(
-                defaultOpenDirPath, basename + "traces.tsv"
-            )
+            defaultOpenDirPath, basename + "_traces.tsv"
+        )
         filename = dlg.getSaveFileName(
             self,
-            self.tr("Choose File"),
+            self.tr("Choose where to store traces"),
             default_tracesfile_name,
             self.tr("Traces files (*%s)") % "tsv",
         )
@@ -2680,7 +2689,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.imagesArray = imagesArray
         mb = QtWidgets.QMessageBox
         msg = self.tr(
-            "Found {} images in this folder, is this the correct length of your recording?".format(str(len(imagesArray))))
+            "Found {} images in this folder, is this the correct length of your recording?".format(
+                str(len(imagesArray))))
         c = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
         if c == mb.No:
             return
@@ -2688,6 +2698,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.extractTraces(imagesArray)
 
     def extractTraces(self, imagesArray):  # , frequency):
+
+        self.setDirty()
+
+        if not self.mayContinue():
+            return
+
         if self.filename:
             if self.filename.endswith(".json"):
                 with open(self.filename) as f:
@@ -2709,10 +2725,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for i in range(0, len(data['shapes'])):
             # compute only for shapes with min confidence
-            if data['shapes'][i]['score']*100 >= self.getConfidence():
+            if data['shapes'][i]['score'] * 100 >= self.getConfidence():
                 roimask = shape_to_mask((data['imageHeight'], data['imageWidth']), data['shapes'][i]['points'],
-                                    shape_type=None,
-                                    line_width=1, point_size=1)
+                                        shape_type=None,
+                                        line_width=1, point_size=1)
                 masks.append(roimask)
 
         self.traceProgress.setValue(10)
@@ -2721,33 +2737,45 @@ class MainWindow(QtWidgets.QMainWindow):
             traces = pool.starmap(tracesForImage, zip(imagesArray, repeat(masks, len(imagesArray))))
 
         self.traceProgress.setValue(self.traceProgress.maximum() - 10)
-        
-        
+
         traceFileName = self.saveTracesDialog()
         # write traces to file
         pd.DataFrame(data=np.array(traces)).to_csv(traceFileName, sep="\t", header=False, index=False)
+        # copy json file to trace location
+        # Step 1: Read the JSON file
+        with open(self.getJSONFile(), 'r') as file:
+            data = json.load(file)
+
+        # Step 2: Write the JSON data to another file
+        output_file_path = os.path.dirname(traceFileName) + "/" + os.path.basename(self.getJSONFile())
+
+        print(output_file_path)
+
+        with open(output_file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+
         self.traceProgress.setValue(self.traceProgress.maximum())
         self.traceProgress.close()
 
-        
         # get long filter length
         lfl, ok = QtWidgets.QInputDialog().getInt(self,
-                                                     "Dynamic Baseline Estimation (long filter length)",
-                                                     "Please provide the wished long filter length [frames] for the dynamic baseline calculation (default: 5401 frames)",
-                                                     5401, 0, 1000000)
+                                                  "Dynamic Baseline Estimation (long filter length)",
+                                                  "Please provide the wished long filter length [frames] for the dynamic baseline calculation (default: 5401 frames)",
+                                                  5401, 0, 1000000)
 
         if ok and lfl:
             self.traceProgress = QtWidgets.QProgressDialog("Calculating dF/F...", "cancel", 0, len(imagesArray), self)
             self.traceProgress.setWindowModality(Qt.WindowModal)
             self.traceProgress.forceShow()
             self.traceProgress.setValue(1)
-            
+
             dff_calc(traceFileName, lfl)
-            
+
             self.traceProgress.setValue(self.traceProgress.maximum())
             self.traceProgress.close()
             mbFormat = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "Files Written",
-                                             "Raw Traces and dF/F files written to {}.".format(os.path.dirname(traceFileName)),
+                                             "Raw Traces and dF/F files written to {}.".format(
+                                                 os.path.dirname(traceFileName)),
                                              QtWidgets.QMessageBox.Ok)
             mbFormat.exec()
 
@@ -3011,7 +3039,7 @@ class MainWindow(QtWidgets.QMainWindow):
         label_file = self.getJSONFile()
         if osp.exists(label_file):
             self.loadFile(label_file, justJSON=True, confidence=self.getConfidence())
-        #enable slider
+        # enable slider
         self.sl.setEnabled(True)
 
     # Message Dialogs. #
@@ -3042,7 +3070,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.dirty:
             return True
         mb = QtWidgets.QMessageBox
-        msg = self.tr('Save annotations to "{}" before closing?\n!! Polygons with confidence values lower than current selection will be lost.').format(
+        msg = self.tr(
+            'Save annotations to "{}" before closing?\n!! Polygons with confidence values lower than current selection will be lost.').format(
             self.filename
         )
         answer = mb.question(
@@ -3187,23 +3216,22 @@ class MainWindow(QtWidgets.QMainWindow):
         if N >= 500:
             imlist = imlist[-500:]
 
-        images = np.array([np.array(Image.open(self.lastOpenDir + "/"+ fname)) for fname in imlist])
+        images = np.array([np.array(Image.open(self.lastOpenDir + "/" + fname)) for fname in imlist])
         arr = np.array(np.mean(images, axis=(0)), dtype=np.uint16)
 
         arr = (arr / (arr.max() / 255)).astype('uint8')
         out = Image.fromarray(arr)
 
-        out.save(self.lastOpenDir + "/" + str(max(0, N-500)) + "-" + str(N) + "_mean.png")
+        out.save(self.lastOpenDir + "/" + str(max(0, N - 500)) + "-" + str(N) + "_mean.png")
 
         if self.micModeOn:
             self.importDirImages(self.lastOpenDir, pattern="_mean.png")
 
         self.fileSelectionChanged()
 
-        self.imagePath = self.lastOpenDir + "/" + str(max(0, N-500)) + "-" + str(N) + "_mean.png"
+        self.imagePath = self.lastOpenDir + "/" + str(max(0, N - 500)) + "-" + str(N) + "_mean.png"
 
         self.loadFile(self.imagePath)
-
 
     def importDirImages(self, dirpath, pattern=None, load=True):
         self.actions.openNextImg.setEnabled(True)
