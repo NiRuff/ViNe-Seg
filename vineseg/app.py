@@ -2353,11 +2353,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 return False
 
             if not justJSON:
-                self.imageData = self.labelFile.imageData
-                self.imagePath = osp.join(
-                    osp.dirname(label_file),
-                    self.labelFile.imagePath,
-                )
+                self.imageData = LabelFile.load_image_file(filename)
+                if self.imageData:
+                    self.imagePath = filename
+
+                # self.imageData = self.labelFile.imageData
+                # print(self.imagePath, filename)
+                #
+                # self.imagePath = osp.join(
+                #     osp.dirname(label_file),
+                #     self.labelFile.imagePath,
+                # )
+                # print(self.imagePath, filename)
+
                 self.otherData = self.labelFile.otherData
         else:
             if not justJSON:
