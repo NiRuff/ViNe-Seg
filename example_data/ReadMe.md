@@ -1,4 +1,4 @@
-## Example Data
+## Example Data, Tutorial and inspecting the Output
 
 The example data for testing is drawn from the [Neurofinder dataset](http://neurofinder.codeneuro.org/).
 
@@ -62,11 +62,32 @@ After adjusting your segmentation and saving the results (Ctrl + S), you can ini
 
 This might be the most time-consuming process in the whole ViNe-Seg pipeline, so you might need to be patient for a minute here if you selected many ROIs.
 
-After the trace extraction was successful, you will be prompted for a long median filter length for the dynamic df/f calculation. The default of 5401 frames was selected in accordance with the ABO pipeline.
+After trace extraction, you will be prompted to decide where to save your files including the traces. The files will finally be stored in two .tsv files, containing the raw traces and the traces after dynamic baseline estimation (df/f values). However, for the latter, you will be prompted for a long median filter length for the dynamic df/f calculation. The default of 5401 frames was selected in accordance with the ABO pipeline.
+
+| Choose Directory to store traces  | Choose long median filter length|
+|:----------------------------------------:|:--------------------------------------:|
+| ![traceDir](https://github.com/NiRuff/GithubMedia/blob/main/tutorial6_3.png?raw=true) | ![prompt](https://github.com/NiRuff/GithubMedia/blob/main/tutorial7.png?raw=true) |
+
+## Inspecting the Output
+
+In the process so far, `ViNe-Seg` has created three different files that we might want to inspect:
+
+1. The segmentation results stored in the `.json` file.
+2. The raw traces.
+3. Traces after dynamic baseline estimation (df/f).
+
+In the provided Jupyter notebook script named `inspectResults.ipynb` (available in the same directory as this Markdown file), there is code for:
+
+- Plotting the mean image.
+- Overlaying the polygons, as stored in the JSON file, on top of the mean image, depending on their confidence values.
+- Plotting the respective traces for those polygons, either from raw or df/f traces.
+
+Check out the [Inspect Results Jupyter Notebook](https://nbviewer.org/github/NiRuff/ViNe-Seg/blob/main/example_data/inspectResults.ipynb) following the link or experiment with the code yourself after downloading it here.
 
 
-<!---![dff](https://github.com/NiRuff/GithubMedia/blob/main/tutorial7.png?raw=true)--->
-<p align="center"><img src="https://github.com/NiRuff/GithubMedia/blob/main/tutorial7.png?raw=true"  width="50%"></p>
+
+
+
 
 
 
