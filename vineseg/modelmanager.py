@@ -16,7 +16,6 @@ manifest_path = os.path.join(script_dir, "experiments/MANIFEST.json")
 
 
 class ModelWindow(QWidget):
-
     """
     Represents the main window for managing models.
 
@@ -48,7 +47,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         super().__init__()
         self.setWindowTitle("Model Manager")
 
@@ -56,7 +55,6 @@ class ModelWindow(QWidget):
         self.load_manifests()
         self.compare_manifests()
         self.setup_table()
-
 
     def initUI(self, MainWindow):
         """
@@ -68,7 +66,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         MainWindow.setObjectName("ModelManagerWindow")
         MainWindow.resize(700, 300)
         MainWindow.setMinimumWidth(700)
@@ -128,7 +126,6 @@ class ModelWindow(QWidget):
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tableWidget.itemSelectionChanged.connect(self.selection_changed)
 
-
     def load_manifests(self):
         """
         Loads online and offline manifests.
@@ -141,9 +138,9 @@ class ModelWindow(QWidget):
         """
         with open(manifest_path, 'r') as f:
             self.local_manifest = json.load(f)
+            self.local_manifest_path = manifest_path
         with urllib.request.urlopen(default_url + "MANIFEST.json") as url:
             self.online_manifest = json.loads(url.read().decode())
-
 
     def compare_manifests(self):
         """
@@ -155,7 +152,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         self.model_list = []
         # check if default model is installed
         if next((item for item in self.local_manifest["installed"] if
@@ -175,7 +172,6 @@ class ModelWindow(QWidget):
                 model["status"] = "available"
                 self.model_list.append(model)
 
-
     def setup_table(self):
         """
         Sets up a table for displaying model information.
@@ -186,7 +182,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         self.tableWidget.setRowCount(len(self.model_list))
         i = 0
         for model in self.model_list:
@@ -195,8 +191,7 @@ class ModelWindow(QWidget):
             self.tableWidget.setItem(i, 2, QTableWidgetItem(model['status']))
 
             i += 1
-        #self.tableWidget.horizontalHeader().resizeSections(QHeaderView.ResizeToContents)
-
+        # self.tableWidget.horizontalHeader().resizeSections(QHeaderView.ResizeToContents)
 
     def selection_changed(self):
         """
@@ -228,7 +223,6 @@ class ModelWindow(QWidget):
             self.pushButton.setText("Select a Model")
             self.pushButton.setEnabled(False)
 
-
     def disconnect_button(self):
         """
         Disconnects the button click event.
@@ -244,6 +238,27 @@ class ModelWindow(QWidget):
         except Exception:
             pass
 
+    def add_local_model(self, model_path):
+        # copy much from install_model but actually prompt for local pt file
+
+        self.local_manifest["installed"].append({
+            "name": os.path.basename(model_path),
+            "location": os.path.basename(model_path)
+        })
+
+        json_string = json.dumps(self.local_manifest)
+        with open(manifest_path, 'w') as outfile:
+            outfile.write(json_string)
+
+        # update model list
+        self.compare_manifests()
+        self.setup_table()
+
+        self.progressBar.hide()
+        self.label.setText("")
+        self.selection_changed()
+
+        pass
 
     def install_model(self, model_index):
         """
@@ -255,7 +270,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         # avoid duble click
         self.disconnect_button()
         self.pushButton.setEnabled(False)
@@ -329,7 +344,6 @@ class ModelWindow(QWidget):
         self.label.setText("")
         self.selection_changed()
 
-
     def uninstall_model(self, model_index):
         """
         Uninstalls a selected model.
@@ -340,7 +354,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         self.disconnect_button()
         self.pushButton.setEnabled(False)
         self.pushButton.setText("Removing...")
@@ -376,7 +390,6 @@ class ModelWindow(QWidget):
         self.setup_table()
         self.selection_changed()
 
-
     def Handle_Progress(self, blocknum, blocksize, totalsize):
         """
         Handles the progress of model downloads.
@@ -389,7 +402,7 @@ class ModelWindow(QWidget):
         Returns:
             - None
         """
-        
+
         # calculate the progress
         read_data = blocknum * blocksize
 

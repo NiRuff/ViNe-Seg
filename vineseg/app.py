@@ -545,6 +545,13 @@ class MainWindow(QtWidgets.QMainWindow):
             tip=self.tr("Open Model Manager"),
         )
 
+        addLocalModel = action(
+            self.tr("Add Local ViNe-Seg Model"),
+            self.popup_local_model_prompt,
+            # icon="ViNeSeg",
+            tip=self.tr("Add locally trained model"),
+        )
+
         showmodelmanagerX = action(
             self.tr("CASCADE Model Manager"),
             self.popup_model_managerX,
@@ -860,7 +867,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 autoseg,
                 None,
                 self.menus.allModels,
-                showmodelmanager
+                showmodelmanager,
+                addLocalModel
             )
         )
 
@@ -1333,6 +1341,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 image_path = self.imagePath
                 model_path = os.path.dirname(__file__).replace("\\", "/") + "/experiments/" + self.currentModel
+
+                print(image_path, model_path)
 
                 prediction_result = predict(image_path, model_path, plot_first=True)
                 if prediction_result[0].masks == None:
@@ -2264,9 +2274,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.removeAberrantJSON()
                 self.loadFile(self.filename, justJSON=True, confidence=self.sl.value())
 
-    def changeNeuronLabels(self):
-        pass
-
     def togglePolygons(self, value):
         for item in self.labelList:
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
@@ -2447,6 +2454,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toggleActions(True)
         self.canvas.setFocus()
         self.status(str(self.tr("Loaded %s")) % osp.basename(str(filename)))
+
         return True
 
     def resizeEvent(self, event):
@@ -2545,6 +2553,50 @@ class MainWindow(QtWidgets.QMainWindow):
     def popup_model_managerX(self):
         self.w = modelmanagerX.ModelWindow()
         self.w.show()
+
+    def popup_local_model_prompt(self):
+
+        # prompt for open file
+        path = osp.dirname(str(self.filename)) if self.filename else "."
+        formats = ["*.pt"]
+        filters = self.tr("Local Model file (*.pt)")
+        fileDialog = FileDialogPreview(self)
+        fileDialog.setFileMode(FileDialogPreview.ExistingFile)
+        fileDialog.setNameFilter(filters)
+        fileDialog.setWindowTitle(
+            self.tr("%s - Choose Local Model file") % __appname__,
+        )
+        fileDialog.setWindowFilePath(path)
+        fileDialog.setViewMode(FileDialogPreview.Detail)
+        if fileDialog.exec_():
+            fileName = fileDialog.selectedFiles()[0]
+            if fileName:
+                self.w = modelmanager.ModelWindow()
+                # add notification for copying and adjusting manifest
+
+                self.statusBar().showMessage(
+                    self.tr("%s . Local model will be copied and integrated in active MANIFEST file %s")
+                    % ("Local Model Integration", self.output_dir)
+                )
+                self.statusBar().show()
+
+                # copy .pt file in vinseg/experiments
+                model_dir = os.path.dirname(self.w.local_manifest_path)
+                from shutil import copyfile
+
+                if not os.path.exists(model_dir + "/" + os.path.basename(fileName)):
+                    try:
+                        copyfile(fileName, model_dir + "/" + os.path.basename(fileName))
+                    except IOError as e:
+                        print(f"Error occurred copying file: {e}")
+                else:
+                    print("Destination file already exists. Skipping copy.")
+
+                # adjust manifest file
+                self.w.add_local_model(fileName)
+
+        pass # - todo
+
 
     def get_file_path(self):
         if not self.mayContinue():
