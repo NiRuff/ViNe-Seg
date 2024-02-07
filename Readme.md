@@ -241,6 +241,9 @@ To train your custom VineSeg model, follow these steps using the provided Jupyte
    - `imgsz`: Sets the input image size for the training. The images will be resized to a square shape with dimensions `imgsz x imgsz` pixels. Here, the value is set to 640, indicating an image size of 640x640 pixels.
    - `batch`: Specifies the batch size, which is the number of training samples utilized in one iteration. In this case, the batch size is set to 4. Adjusting the batch size can impact training speed and memory requirements.
 
-                
-
+3. Add the local model to ViNe-Seg
+   
+   The ViNe-Seg GUI offers the Option to add a locally trained model into your ViNe-Seg version under __Autosegmentation - Add Local ViNe-Seg Model__.
+   Do not forget to select the model next.
+   If you'd like to contribute your model to the community, do not hesitate to contact us, so that we can integrate your model in the common MANIFEST file and make it available for all users via our servers.
         
