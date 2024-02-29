@@ -67,6 +67,12 @@ pip install vineseg
 
 From now on, the advanced version of ViNe-Seg will be installed in your conda environment called *vineseg-adv*.
 
+## How to run ViNe-Seg
+
+In the ``/examples`` directory you can find a more detailed explanation as well as example data to run ViNe-Seg on.
+
+For a shorter explanation, see below:
+
 ## Starting ViNe-Seg
 You can start ViNe-Seg using the following command after installation (make sure not to work in an environment in which ViNe-Seg is not installed):
 ```
