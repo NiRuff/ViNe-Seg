@@ -11,6 +11,7 @@ import webbrowser
 from PIL import Image, ImageEnhance
 import imageio
 import pandas as pd
+import tifffile as tfile
 
 import imgviz
 from PyQt5.QtGui import QFont
@@ -39,7 +40,7 @@ from .widgets import UniqueLabelQListWidget
 from .widgets import ZoomWidget
 from shapely.geometry import Polygon
 from .utils import shape_to_mask
-from .traces.tracemanager import tracesForImage
+from .traces.tracemanager import tracesForImage, tracesForSlice
 from .traces.dff import dff_calc
 from .spike_detection import run_CASCADE
 from . import modelmanager
@@ -2701,7 +2702,17 @@ class MainWindow(QtWidgets.QMainWindow):
             mb.warning(self, self.tr("Attention"), msg, mb.Ok)
             return
 
-        # get dir
+        mb = QtWidgets.QMessageBox()
+        msg = self.tr("How is your image series stored?")
+        btn_folder = mb.addButton('Folder with single image files', QtWidgets.QMessageBox.YesRole)
+        btn_file = mb.addButton('Tiff Stack', QtWidgets.QMessageBox.NoRole)
+        mb.addButton(QtWidgets.QMessageBox.Cancel)
+        mb.setText(msg)
+        mb.setWindowTitle(self.tr("Data Format"))
+        mb.setDefaultButton(btn_folder)
+    
+        mb.exec_()
+    
         if self.lastOpenDir and osp.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         elif self.originalImageFile:
@@ -2712,50 +2723,73 @@ class MainWindow(QtWidgets.QMainWindow):
             defaultOpenDirPath = (
                 osp.dirname(self.filename) if self.filename else "."
             )
-        images_dir = str(
-            QtWidgets.QFileDialog.getExistingDirectory(
-                self,
-                self.tr("%s - Open Images Directory") % __appname__,
-                defaultOpenDirPath,
-                QtWidgets.QFileDialog.ShowDirsOnly
-                | QtWidgets.QFileDialog.DontResolveSymlinks,
+    
+        if mb.clickedButton() == btn_folder:
+            # Handle folder selection
+            images_dir = str(
+                QtWidgets.QFileDialog.getExistingDirectory(
+                    self,
+                    self.tr("%s - Open Images Directory") % __appname__,
+                    defaultOpenDirPath,
+                    QtWidgets.QFileDialog.ShowDirsOnly
+                    | QtWidgets.QFileDialog.DontResolveSymlinks,
+                )
             )
-        )
-        if not images_dir:
-            return
-        # load image file names into an array
-        images_type = "tif"
-        imagesArray = [os.path.join(images_dir, f) for f in sorted(os.listdir(images_dir)) if
-                       os.path.isfile(os.path.join(images_dir, f)) and f.endswith("." + images_type)]
-
-        # if no tif files, try tiff files
-        if len(imagesArray) < 1:
-            images_type = "tiff"
+            if not images_dir:
+                return
+            # load image file names into an array
+            images_type = "tif"
             imagesArray = [os.path.join(images_dir, f) for f in sorted(os.listdir(images_dir)) if
-                           os.path.isfile(os.path.join(images_dir, f)) and f.endswith("." + images_type)]
-
-        # if still no images found, option for choosing other directory
-        if len(imagesArray) < 1:
+                        os.path.isfile(os.path.join(images_dir, f)) and f.endswith("." + images_type)]
+    
+            # if no tif files, try tiff files
+            if len(imagesArray) < 1:
+                images_type = "tiff"
+                imagesArray = [os.path.join(images_dir, f) for f in sorted(os.listdir(images_dir)) if
+                            os.path.isfile(os.path.join(images_dir, f)) and f.endswith("." + images_type)]
+    
+            # if still no images found, option for choosing other directory
+            if len(imagesArray) < 1:
+                mb = QtWidgets.QMessageBox
+                msg = self.tr(
+                    "No .tif or .tiff files found in given directory. Choose another directory?")
+                c = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
+                if c == mb.Yes:
+                    self.start_trace_extraction()
+                if c == mb.No:
+                    return
+            # sorting worked
+    
             mb = QtWidgets.QMessageBox
             msg = self.tr(
-                "No .tif or .tiff files found in given directory. Choose another directory?")
+                "Found {} images in this folder, is this the correct length of your recording?".format(
+                    str(len(imagesArray))))
             c = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
-            if c == mb.Yes:
-                self.start_trace_extraction()
             if c == mb.No:
                 return
-        # sorting worked
-
-        self.imagesArray = imagesArray
-        mb = QtWidgets.QMessageBox
-        msg = self.tr(
-            "Found {} images in this folder, is this the correct length of your recording?".format(
-                str(len(imagesArray))))
-        c = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
-        if c == mb.No:
+    
+            self.extractTraces(imagesArray)
+        elif mb.clickedButton() == btn_file:
+            # Handle single Tiff stack selection
+            stackFileName, filter = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', 
+            defaultOpenDirPath, 'Tiff Files (*.tif *.tiff)')
+            tif = tfile.TiffFile(stackFileName)
+            if len(tif.pages) != tif.series[0].shape[0]:
+                mb = QtWidgets.QMessageBox
+                msg = self.tr("This file is not a multipage Tiff file!")
+                mb.warning(self, self.tr("Attention"), msg, mb.Ok)
+                return
+            mb = QtWidgets.QMessageBox
+            msg = self.tr(
+                "This stack contains {} images, is this the correct length of your recording?".format(
+                    str(len(tif.pages))))
+            c = mb.warning(self, self.tr("Attention"), msg, mb.Yes | mb.No)
+            if c == mb.No:
+                return
+            self.extractTraces(stackFileName)
+        else:  # User clicked Cancel or closed the dialog
             return
-
-        self.extractTraces(imagesArray)
+        
 
     def extractTraces(self, imagesArray):  # , frequency):
 
@@ -2792,9 +2826,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 masks.append(roimask)
 
         self.traceProgress.setValue(10)
-
-        with Pool() as pool:
-            traces = pool.starmap(tracesForImage, zip(imagesArray, repeat(masks, len(imagesArray))))
+        
+        if isinstance(imagesArray, str):
+            tif = tfile.TiffFile(imagesArray)
+            tflen = len(tif.pages)
+            with Pool() as pool:
+                traces = pool.starmap(tracesForSlice, zip(repeat(imagesArray, tflen), list(range(0, tflen)), repeat(masks, tflen)))
+        else:
+            with Pool() as pool:
+                traces = pool.starmap(tracesForImage, zip(imagesArray, repeat(masks, len(imagesArray))))
 
         self.traceProgress.setValue(self.traceProgress.maximum() - 10)
 

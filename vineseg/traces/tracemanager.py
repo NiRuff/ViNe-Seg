@@ -4,6 +4,7 @@ from PIL import Image
 import json
 import sys
 from ..utils import shape_to_mask
+import tifffile as tfile
 
 # Function to convert an image to a numpy array
 def image2array(image_path):
@@ -22,6 +23,16 @@ def tracesForImage(imagePath, masks):
 
     return trace
 
+def tracesForSlice(stackPath, slice, masks):
+    print(slice)
+    trace = np.zeros(len(masks))
+    im = tfile.imread(stackPath, key=slice)
+    for x in range(0, len(masks)):
+        roimask = np.invert(masks[x])
+        a = np.ma.array(im, mask=roimask)
+        trace[x] = a.mean()
+
+    return trace
 
 from multiprocessing import Pool, freeze_support
 from itertools import repeat
