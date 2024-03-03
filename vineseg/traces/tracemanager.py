@@ -24,7 +24,6 @@ def tracesForImage(imagePath, masks):
     return trace
 
 def tracesForSlice(stackPath, slice, masks):
-    print(slice)
     trace = np.zeros(len(masks))
     im = tfile.imread(stackPath, key=slice)
     for x in range(0, len(masks)):
