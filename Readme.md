@@ -20,6 +20,16 @@
 |CASCADE SPIKE Inference| :x: | :heavy_check_mark: |
 
 
+## Citing ViNe-Seg:
+
+ViNe-Seg was published in [Oxford Bioinformatics](https://doi.org/10.1093/bioinformatics/btae177).
+
+Please cite as
+
+```
+Nicolas Ruffini, Saleh Altahini, Stephan Weißbach, Nico Weber, Jonas Milkovits, Anna Wierczeiko, Hendrik Backhaus, Albrecht Stroh, ViNe-Seg: Deep-Learning assisted segmentation of visible neurons and subsequent analysis embedded in a graphical user interface, Bioinformatics, 2024;, btae177, https://doi.org/10.1093/bioinformatics/btae177
+```
+
 ## Installation of the basic version of ViNe-Seg
 We aimed to develop ViNe-Seg as user-friendly as possible. Therefor, ViNe-Seg comes with a GUI and is easily installable using pip with the command:
 
